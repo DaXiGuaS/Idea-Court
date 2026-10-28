@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>想法法庭</title>
+  <style>
+    :root {
+      --bg: #0e0e11;
+      --panel: #17171c;
+      --panel-2: #1d1d24;
+      --line: #2a2a33;
+      --text: #ececf1;
+      --muted: #8b8b99;
+      --accent: #e63946;
+      --ok: #35c46a;
+      --no: #e5484d;
+      --mid: #f0b429;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(900px 500px at 50% -10%, rgba(230, 57, 70, 0.12), transparent 70%),
+        var(--bg);
+      color: var(--text);
+      font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      line-height: 1.7;
+    }
+
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 20px 80px;
+    }
+
+    header { text-align: center; margin-bottom: 40px; }
+
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      letter-spacing: 10px;
+      text-indent: 10px;
+      font-weight: 700;
+    }
+
+    .subtitle { color: var(--muted); margin-top: 8px; font-size: 14px; letter-spacing: 1px; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .mode-switch { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+
+    .mode-label { color: var(--muted); font-size: 12px; }
+
+    button.mode-btn {
+      background: var(--panel-2);
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      letter-spacing: normal;
+      text-indent: 0;
+      font-weight: normal;
+    }
+
+    button.mode-btn:hover { opacity: 1; }
+
+    button.mode-btn.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(230, 57, 70, 0.10);
+    }
+
+    .presets { margin-top: 22px; border-top: 1px dashed var(--line); padding-top: 18px; }
+
+    .presets-title { color: var(--muted); font-size: 12px; margin: 0 0 10px; }
+
+    .preset-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+    button.preset {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: left;
+      letter-spacing: normal;
+      text-indent: 0;
+      font-size: 13px;
+      font-weight: normal;
+      line-height: 1.5;
+    }
+
+    button.preset:hover { opacity: 1; border-color: var(--accent); }
+    button.preset:active { transform: scale(0.98); }
+
+    .preset .emoji { font-size: 18px; }
+    .preset .p-title { display: block; font-weight: 600; margin: 4px 0 2px; }
+    .preset .p-desc { display: block; font-size: 11px; color: var(--muted); }
+
+    label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      resize: vertical;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 14px;
+      font: inherit;
+      outline: none;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      gap: 12px;
+    }
+
+    #counter { color: var(--muted); font-size: 12px; }
+
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 34px;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      text-indent: 4px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    button:hover { opacity: 0.9; }
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .ghost {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-indent: 0;
+      font-size: 14px;
+      padding: 10px 22px;
+    }
+
+    #stage { margin-top: 32px; }
+
+    /* 吸顶显示最初的想法，防止多轮反驳后忘了原点 */
+    .original {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      background: rgba(23, 23, 28, 0.94);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .original .oi-label { color: var(--accent); font-size: 12px; white-space: nowrap; }
+
+    .original .oi-text {
+      color: var(--muted);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* 点一下展开完整想法 */
+    .original.expanded .oi-text { white-space: normal; text-overflow: clip; }
+
+    #seats {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+
+    .seat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      opacity: 0.3;
+      transition: opacity 0.4s, transform 0.4s;
+    }
+
+    .seat.active { opacity: 1; transform: translateY(-3px); }
+
+    .seat .face {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+    }
+
+    .seat.active .face {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
+    }
+
+    .seat .who { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+    #loading {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 12px;
+      animation: breath 1.6s ease-in-out infinite;
+    }
+
+    @keyframes breath { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+    .speech {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--accent);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      animation: rise 0.35s ease-out;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .speech-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .speech-head .face { font-size: 20px; }
+
+    .speech-head strong { font-size: 14px; }
+
+    .tag {
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-left: 6px;
+    }
+
+    .vote {
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+      padding: 2px 8px;
+      white-space: nowrap;
+    }
+
+    .vote-ok { color: var(--ok); background: rgba(53, 196, 106, 0.12); }
+    .vote-no { color: var(--no); background: rgba(229, 72, 77, 0.12); }
+    .vote-mid { color: var(--mid); background: rgba(240, 180, 41, 0.12); }
+
+    .content { margin: 0; font-size: 15px; }
+
+    .reason {
+      margin: 10px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px dashed var(--line);
+      padding-top: 8px;
+    }
+
+    #verdict-card {
+      margin-top: 30px;
+      border: 1px solid var(--accent);
+      border-radius: 16px;
+      padding: 28px 24px;
+      background: linear-gradient(180deg, rgba(230, 57, 70, 0.07), transparent 60%), var(--panel);
+      animation: rise 0.5s ease-out;
+      position: relative;
+    }
+
+    .stamp {
+      display: inline-block;
+      border: 3px solid var(--accent);
+      color: var(--accent);
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 6px;
+      text-indent: 6px;
+      padding: 4px 16px;
+      border-radius: 8px;
+      transform: rotate(-7deg);
+      opacity: 0.95;
+      margin-bottom: 22px;
+    }
+
+    .votes {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .votes div {
+      flex: 1;
+      background: var(--panel-2);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .votes strong { display: block; font-size: 24px; line-height: 1.2; }
+    .votes span { font-size: 11px; color: var(--muted); }
+
+    .kv { font-size: 14px; margin: 10px 0; }
+    .kv b { color: var(--accent); }
+
+    .summary { font-size: 13px; color: var(--muted); margin: 0; }
+
+    .rebuttal {
+      margin-top: 24px;
+      border-top: 1px dashed var(--line);
+      padding-top: 20px;
+    }
+
+    .rebuttal textarea { min-height: 76px; font-size: 14px; }
+
+    /* 反驳提示：列出每位评审的核心问题，降低"不知道答什么"的难度 */
+    .hints {
+      list-style: none;
+      padding: 10px 12px;
+      margin: 0 0 10px;
+      background: var(--panel-2);
+      border-radius: 8px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .hints li { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .hints li b { color: var(--text); font-weight: 500; }
+
+    .speech.mine {
+      border-left-color: #4a7dff;
+      background: rgba(74, 125, 255, 0.06);
+    }
+
+    .hidden { display: none !important; }
+
+    .error {
+      color: var(--no);
+      text-align: center;
+      padding: 16px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 520px) {
+      main { padding: 28px 14px 60px; }
+      h1 { font-size: 26px; letter-spacing: 6px; text-indent: 6px; }
+      .seat .face { width: 42px; height: 42px; font-size: 20px; }
+      .seat .who { font-size: 9px; }
+      button { padding: 11px 26px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>想法法庭</h1>
+      <p class="subtitle">你的想法，撑不过三分钟。</p>
+    </header>
+
+    <section id="input-section" class="panel">
+      <div class="mode-switch">
+        <span class="mode-label">评审模式</span>
+        <button class="mode-btn active" data-mode="product">做产品</button>
+        <button class="mode-btn" data-mode="decision">做个决定</button>
+      </div>
+      <label for="idea" id="idea-label">说说你的想法</label>
+      <textarea id="idea" maxlength="500" placeholder="例如：做一个帮大学生自动整理课程通知的小程序"></textarea>
+      <div class="row">
+        <span id="counter">0 / 500</span>
+        <button id="submit">开庭</button>
+      </div>
+
+      <div class="presets">
+        <p class="presets-title">不知道提什么？点一个直接开庭</p>
+        <div class="preset-list" id="preset-list"></div>
+      </div>
+    </section>
+
+    <section id="stage" class="hidden">
+      <div id="original-idea" class="original" title="点一下展开/收起">
+        <span class="oi-label">你的想法</span>
+        <span class="oi-text"></span>
+      </div>
+      <div id="seats"></div>
+      <div id="loading">评审团正在入场…</div>
+      <div id="speeches"></div>
+    </section>
+
+    <section id="verdict-card" class="hidden"></section>
+  </main>
+
+  <script>
+    // 顺序与后端 prompts.py 的 ROLES 一致，按位置取头像，避免名字细微差异导致错位
+    const SEATS_PRODUCT = [
+      { emoji: "🧑‍💼", name: "产品经理" },
+      { emoji: "💻", name: "后端工程师" },
+      { emoji: "🧪", name: "测试工程师" },
+      { emoji: "💰", name: "老板" },
+      { emoji: "🙋", name: "真实用户" },
+    ];
+
+    // 决策模式：审议"要不要买 / 要不要做某个决定"
+    const SEATS_DECISION = [
+      { emoji: "🧮", name: "精算师" },
+      { emoji: "⚠️", name: "风险官" },
+      { emoji: "🫀", name: "情绪观察员" },
+      { emoji: "👴", name: "过来人" },
+      { emoji: "🛡️", name: "反方" },
+    ];
+
+    let currentMode = "product";
+
+    function currentSeats() {
+      if (currentMode === "decision") return SEATS_DECISION;
+      return SEATS_PRODUCT;
+    }
+
+    const VOTE_LABEL = { approve: "支持", reject: "反对", conditional: "有条件" };
+
+    const ideaEl = document.getElementById("idea");
+    const counterEl = document.getElementById("counter");
+    const submitBtn = document.getElementById("submit");
+    const inputSection = document.getElementById("input-section");
+    const stageEl = document.getElementById("stage");
+    const seatsEl = document.getElementById("seats");
+    const loadingEl = document.getElementById("loading");
+    const speechesEl = document.getElementById("speeches");
+    const verdictEl = document.getElementById("verdict-card");
+    const originalIdeaEl = document.getElementById("original-idea");
+    const originalTextEl = originalIdeaEl.querySelector(".oi-text");
+
+    // 多轮评审需要的状态：当前想法 + 累积的全部发言
+    let currentIdea = "";
+    let allSpeeches = [];
+    let currentVerdict = null;
+
+    // 一个很小的本地记忆：记住你提过的想法，下次角色可以顺口损你一句
+    // localStorage 在隐私模式下可能不可用，所以全部包在 try 里
+    function loadPastIdeas() {
+      try {
+        const raw = localStorage.getItem("idea-court-past");
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function savePastIdea(idea) {
+      try {
+        const list = loadPastIdeas().filter((item) => item !== idea);
+        list.unshift(idea);
+        localStorage.setItem("idea-court-past", JSON.stringify(list.slice(0, 10)));
+      } catch {
+        // 存不了就算了，不影响主流程
+      }
+    }
+
+    // 预置案例：每个模式一套，降低第一次使用的门槛
+    const PRESETS = {
+      product: [
+        {
+          emoji: "📚",
+          title: "课表整理小程序",
+          desc: "大概率被全票否决",
+          idea: "一个帮大学生自动整理课程通知的小程序",
+        },
+        {
+          emoji: "🧾",
+          title: "自由职业者收支",
+          desc: "反驳之后有机会翻盘",
+          idea: "一个帮自由职业者整理收支的工具：从微信、支付宝导出的账单里自动抓取收支，按规则分类，每月生成一份可以直接给会计的报表",
+        },
+        {
+          emoji: "💰",
+          title: "物业群 AI 客服",
+          desc: "看看「使用者不是付费者」会怎么被打",
+          idea: "一个帮小区物业客服回复业主群常见问题的工具：客服输入业主的问题，工具基于物业自己的话术文档和群聊记录生成一条回复草稿，客服确认后再发",
+        },
+      ],
+      decision: [
+        {
+          emoji: "📷",
+          title: "买一台两万的相机",
+          desc: "听听他们怎么劝退",
+          idea: "我想花两万块买一台全画幅相机，主要用来拍旅行和日常，一年大概出去两三次",
+        },
+        {
+          emoji: "💼",
+          title: "要不要跳槽",
+          desc: "涨薪 30%，但要换城市",
+          idea: "我在考虑跳槽，新公司涨薪 30%，但要去另一个城市，女朋友还在这边",
+        },
+        {
+          emoji: "🎓",
+          title: "报一个两万的课",
+          desc: "对方说学完能转行",
+          idea: "我想报一个两万块的线下培训班，对方说学完能转行做产品经理",
+        },
+      ],
+    };
+
+    function renderSeats() {
+      seatsEl.innerHTML = "";
+      currentSeats().forEach((seat) => {
+        const div = document.createElement("div");
+        div.className = "seat";
+        div.innerHTML = `<div class="face">${seat.emoji}</div><div class="who">${seat.name}</div>`;
+        seatsEl.appendChild(div);
+      });
+    }
+
+    function killerLabel() {
+      return currentMode === "decision" ? "最该想清楚的问题" : "最致命的问题";
+    }
+
+    // 输入区的文案随评审模式变化
+    function applyModeText() {
+      const isDecision = currentMode === "decision";
+      document.getElementById("idea-label").textContent = isDecision
+        ? "说说你在纠结什么"
+        : "说说你的想法";
+      ideaEl.placeholder = isDecision
+        ? "例如：我想花两万块买一台全画幅相机，主要用来拍旅行和日常"
+        : "例如：做一个帮大学生自动整理课程通知的小程序";
+    }
+
+    originalIdeaEl.addEventListener("click", () => {
+      originalIdeaEl.classList.toggle("expanded");
+    });
+
+    // 切换评审模式：只影响下一次开庭
+    document.querySelectorAll(".mode-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentMode = btn.dataset.mode;
+        document.querySelectorAll(".mode-btn").forEach((b) =>
+          b.classList.toggle("active", b === btn)
+        );
+        renderPresets();
+        applyModeText();
+      });
+    });
+
+    const presetList = document.getElementById("preset-list");
+
+    function renderPresets() {
+      presetList.innerHTML = "";
+      (PRESETS[currentMode] || PRESETS.product).forEach((preset) => {
+        const btn = document.createElement("button");
+        btn.className = "preset";
+        btn.innerHTML = `
+          <span class="emoji">${preset.emoji}</span>
+          <span class="p-title">${preset.title}</span>
+          <span class="p-desc">${preset.desc}</span>
+        `;
+        btn.addEventListener("click", () => {
+          ideaEl.value = preset.idea;
+          counterEl.textContent = `${preset.idea.length} / 500`;
+          start();
+        });
+        presetList.appendChild(btn);
+      });
+    }
+
+    renderPresets();
+    applyModeText();
+
+    ideaEl.addEventListener("input", () => {
+      counterEl.textContent = `${ideaEl.value.length} / 500`;
+    });
+
+    submitBtn.addEventListener("click", start);
+
+    // 逐字打印，模拟"真人正在说话"的节奏
+    // speed = 每个字的间隔毫秒数，调大更慢：18 偏快 / 35 适中 / 55 偏慢
+    function typeText(el, text, speed = 35) {
+      return new Promise((resolve) => {
+        let i = 0;
+        const timer = setInterval(() => {
+          el.textContent = text.slice(0, ++i);
+          if (i >= text.length) {
+            clearInterval(timer);
+            resolve();
+          }
+        }, speed);
+      });
+    }
+
+    async function showSpeech(speech, index) {
+      const card = document.createElement("article");
+      card.className = "speech";
+      card.innerHTML = `
+        <div class="speech-head">
+          <span class="face">${currentSeats()[index]?.emoji || "🤖"}</span>
+          <strong>${speech.role}</strong>
+          <span class="tag">${speech.focus}</span>
+          <span class="vote vote-${speech.vote}">${VOTE_LABEL[speech.vote] || speech.vote}</span>
+        </div>
+        <p class="content"></p>
+        <p class="reason hidden">理由：${speech.reason}</p>
+      `;
+      speechesEl.appendChild(card);
+      card.scrollIntoView({ behavior: "smooth", block: "end" });
+
+      await typeText(card.querySelector(".content"), speech.content);
+      card.querySelector(".reason").classList.remove("hidden");
+    }
+
+    function showVerdict(verdict, speeches = []) {
+      currentVerdict = verdict;
+
+      // 从每条发言里取第一句问句，列成提示，让用户知道该回答什么
+      const hints = speeches
+        .map((s, i) => {
+          const cut = s.content.indexOf("？");
+          const question = cut === -1 ? s.content.slice(0, 20) : s.content.slice(0, cut + 1);
+          const short = question.length > 40 ? question.slice(0, 40) + "…" : question;
+          return `<li>${currentSeats()[i]?.emoji || "🤖"} <b>${s.focus}</b>：${short}</li>`;
+        })
+        .join("");
+
+      verdictEl.innerHTML = `
+        <div class="stamp">${verdict.decision}</div>
+        <div class="votes">
+          <div><strong style="color: var(--ok)">${verdict.approve}</strong><span>支持</span></div>
+          <div><strong style="color: var(--no)">${verdict.reject}</strong><span>反对</span></div>
+          <div><strong style="color: var(--mid)">${verdict.conditional}</strong><span>有条件</span></div>
+        </div>
+        <p class="kv"><b>${killerLabel()}</b><br />${verdict.killer_question}</p>
+        <p class="summary">${verdict.summary}</p>
+
+        <div class="rebuttal">
+          <label for="reply">不服？写下你的反驳，他们会接着追问</label>
+          ${hints ? `<ul class="hints">${hints}</ul>` : ""}
+          <textarea id="reply" maxlength="500" placeholder="例如：这不是给学生用的，是给班级辅导员用的……"></textarea>
+          <div class="row">
+            <span id="reply-counter">0 / 500</span>
+            <button id="reply-submit">反驳</button>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content: flex-end; margin-top: 14px">
+          <button class="ghost" id="share">生成分享卡</button>
+          <button class="ghost" id="again">再来一个</button>
+        </div>
+      `;
+      verdictEl.classList.remove("hidden");
+      verdictEl.scrollIntoView({ behavior: "smooth", block: "end" });
+
+      document.getElementById("again").addEventListener("click", reset);
+      document.getElementById("share").addEventListener("click", () =>
+        drawShareCard(currentVerdict)
+      );
+
+      const replyEl = document.getElementById("reply");
+      replyEl.addEventListener("input", () => {
+        document.getElementById("reply-counter").textContent =
+          `${replyEl.value.length} / 500`;
+      });
+      document.getElementById("reply-submit").addEventListener("click", sendReply);
+    }
+
+    function reset() {
+      currentIdea = "";
+      allSpeeches = [];
+      inputSection.classList.remove("hidden");
+      stageEl.classList.add("hidden");
+      verdictEl.classList.add("hidden");
+      speechesEl.innerHTML = "";
+      document.querySelectorAll(".seat").forEach((s) => s.classList.remove("active"));
+      ideaEl.focus();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // 按宽度把长文本切成多行，canvas 不会自动换行
+    function wrapText(ctx, text, maxWidth) {
+      const lines = [];
+      let line = "";
+      for (const ch of text) {
+        const test = line + ch;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = ch;
+        } else {
+          line = test;
+        }
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    // 用原生 canvas 画一张竖版分享图，不依赖任何第三方库
+    function drawShareCard(verdict) {
+      if (!verdict) return;
+
+      const W = 750;
+      const H = 1000;
+      const scale = 2; // 2 倍分辨率，手机上看起来不糊
+      const canvas = document.createElement("canvas");
+      canvas.width = W * scale;
+      canvas.height = H * scale;
+
+      const ctx = canvas.getContext("2d");
+      ctx.scale(scale, scale);
+      const FONT = '"PingFang SC", "Microsoft YaHei", sans-serif';
+
+      // 背景与顶部光晕
+      ctx.fillStyle = "#0e0e11";
+      ctx.fillRect(0, 0, W, H);
+      const glow = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, 520);
+      glow.addColorStop(0, "rgba(230, 57, 70, 0.20)");
+      glow.addColorStop(1, "rgba(230, 57, 70, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, W, H);
+
+      // 标题
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#ececf1";
+      ctx.font = `bold 50px ${FONT}`;
+      ctx.fillText("想 法 法 庭", W / 2, 108);
+      ctx.fillStyle = "#8b8b99";
+      ctx.font = `20px ${FONT}`;
+      ctx.fillText("你的想法，撑不过三分钟", W / 2, 150);
+
+      // 判决印章（旋转一点更像真的盖上去的）
+      ctx.save();
+      ctx.translate(W / 2, 268);
+      ctx.rotate((-7 * Math.PI) / 180);
+      ctx.font = `bold 54px ${FONT}`;
+      const stampWidth = ctx.measureText(verdict.decision).width + 80;
+      ctx.strokeStyle = "#e63946";
+      ctx.lineWidth = 5;
+      ctx.strokeRect(-stampWidth / 2, -50, stampWidth, 100);
+      ctx.fillStyle = "#e63946";
+      ctx.textBaseline = "middle";
+      ctx.fillText(verdict.decision, 0, 3);
+      ctx.restore();
+      ctx.textBaseline = "alphabetic";
+
+      // 你的想法
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#8b8b99";
+      ctx.font = `18px ${FONT}`;
+      ctx.fillText("你的想法", 60, 392);
+      ctx.fillStyle = "#ececf1";
+      ctx.font = `23px ${FONT}`;
+      wrapText(ctx, currentIdea, W - 120)
+        .slice(0, 3)
+        .forEach((line, i) => ctx.fillText(line, 60, 432 + i * 36));
+
+      // 最致命的问题
+      ctx.fillStyle = "#8b8b99";
+      ctx.font = `18px ${FONT}`;
+      ctx.fillText(killerLabel(), 60, 560);
+      ctx.fillStyle = "#e63946";
+      ctx.font = `24px ${FONT}`;
+      wrapText(ctx, verdict.killer_question, W - 120)
+        .slice(0, 4)
+        .forEach((line, i) => ctx.fillText(line, 60, 602 + i * 38));
+
+      // 票数
+      const votes = [
+        { label: "支持", value: verdict.approve, color: "#35c46a" },
+        { label: "反对", value: verdict.reject, color: "#e5484d" },
+        { label: "有条件", value: verdict.conditional, color: "#f0b429" },
+      ];
+      const boxW = 190;
+      const gap = 20;
+      const startX = (W - (boxW * 3 + gap * 2)) / 2;
+      votes.forEach((v, i) => {
+        const x = startX + i * (boxW + gap);
+        ctx.fillStyle = "#17171c";
+        ctx.fillRect(x, 790, boxW, 110);
+        ctx.textAlign = "center";
+        ctx.fillStyle = v.color;
+        ctx.font = `bold 44px ${FONT}`;
+        ctx.fillText(String(v.value), x + boxW / 2, 850);
+        ctx.fillStyle = "#8b8b99";
+        ctx.font = `18px ${FONT}`;
+        ctx.fillText(v.label, x + boxW / 2, 880);
+      });
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#55555f";
+      ctx.font = `18px ${FONT}`;
+      ctx.fillText("AI 评审团 · 想法法庭", W / 2, 955);
+
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `想法法庭-${verdict.decision}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }, "image/png");
+    }
+
+    // 把用户的反驳作为一条发言插进时间线，让节奏看起来像真的在对话
+    function appendUserMessage(text) {
+      const card = document.createElement("article");
+      card.className = "speech mine";
+      card.innerHTML = `
+        <div class="speech-head">
+          <span class="face">🙋‍♂️</span>
+          <strong>你</strong>
+        </div>
+        <p class="content"></p>
+      `;
+      card.querySelector(".content").textContent = text;
+      speechesEl.appendChild(card);
+      card.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+
+    async function sendReply() {
+      const replyEl = document.getElementById("reply");
+      const reply = replyEl.value.trim();
+      if (!reply) {
+        replyEl.focus();
+        return;
+      }
+
+      replyEl.disabled = true;
+      document.getElementById("reply-submit").disabled = true;
+
+      appendUserMessage(reply);
+      verdictEl.classList.add("hidden");
+
+      try {
+        const res = await fetch("/api/review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            idea: currentIdea,
+            history: allSpeeches,
+            user_reply: reply,
+            past_ideas: loadPastIdeas().slice(0, 3),
+            mode: currentMode,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "评审服务暂时不可用");
+
+        allSpeeches = allSpeeches.concat(data.speeches);
+
+        for (let i = 0; i < data.speeches.length; i++) {
+          await showSpeech(data.speeches[i], i);
+        }
+        showVerdict(data.verdict, data.speeches);
+      } catch (err) {
+        speechesEl.insertAdjacentHTML(
+          "beforeend",
+          `<p class="error">${err.message}</p>`
+        );
+        verdictEl.classList.remove("hidden");
+      } finally {
+        document.getElementById("reply-submit")?.removeAttribute("disabled");
+        document.getElementById("reply")?.removeAttribute("disabled");
+      }
+    }
+
+    async function start() {
+      const idea = ideaEl.value.trim();
+      if (!idea) {
+        ideaEl.focus();
+        return;
+      }
+
+      currentIdea = idea;
+      allSpeeches = [];
+
+      // 吸顶条显示最初的想法；重新开庭时收起
+      originalIdeaEl.classList.remove("expanded");
+      originalTextEl.textContent = idea;
+
+      submitBtn.disabled = true;
+      inputSection.classList.add("hidden");
+      stageEl.classList.remove("hidden");
+      verdictEl.classList.add("hidden");
+      speechesEl.innerHTML = "";
+      loadingEl.classList.remove("hidden");
+
+      renderSeats();
+      document.querySelectorAll(".seat").forEach((s) => s.classList.remove("active"));
+
+      // 等待接口期间，让评审一个个"入场"
+      let cursor = 0;
+      const seatTimer = setInterval(() => {
+        const seats = document.querySelectorAll(".seat");
+        if (cursor < seats.length) seats[cursor++].classList.add("active");
+      }, 700);
+
+      const pastIdeas = loadPastIdeas().filter((item) => item !== idea);
+
+      try {
+        const res = await fetch("/api/review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            idea,
+            past_ideas: pastIdeas.slice(0, 3),
+            mode: currentMode,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "评审服务暂时不可用");
+
+        clearInterval(seatTimer);
+        document.querySelectorAll(".seat").forEach((s) => s.classList.add("active"));
+        loadingEl.classList.add("hidden");
+        allSpeeches = data.speeches;
+        savePastIdea(idea);
+
+        for (let i = 0; i < data.speeches.length; i++) {
+          await showSpeech(data.speeches[i], i);
+        }
+        showVerdict(data.verdict, data.speeches);
+      } catch (err) {
+        clearInterval(seatTimer);
+        loadingEl.classList.add("hidden");
+        speechesEl.innerHTML = `<p class="error">${err.message}</p>`;
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

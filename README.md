@@ -78,6 +78,8 @@ LLM_TIMEOUT=60
 uvicorn main:app --reload
 ```
 
+Windows 用户也可以直接**双击项目根目录的 `run.bat`**，效果一样。
+
 浏览器打开 <http://127.0.0.1:8000>
 
 ---
